@@ -26,9 +26,13 @@ st.write("Counter-Strike Global Offensive (CS:GO) is an online First-Person Shoo
 # st.write("## 0. Load data")
 
 
-@st.cache(allow_output_mutation=True)
 def load_data():
-    return pd.read_csv("results.csv"), pd.read_csv("players.csv")
+    if os.path.isfile("players.csv"):
+        return pd.read_csv("results.csv"), pd.read_csv("players.csv")
+    players_sub_data = []
+    for j in range(1, 4):
+        players_sub_data.append(pd.read_csv("players_{}.csv".format(j)))
+    return pd.read_csv("results.csv"), pd.concat(players_sub_data)
 
 
 results_df, players_df = load_data()
@@ -58,7 +62,7 @@ players_source_df = players_df[players_df.date.dt.year == year_sel]
 st.write("## 1. Rating Consistency")
 st.sidebar.write("## 1. Rating Consistency")
 
-top_options = [5, 10, 20, 50, 100, 200]
+top_options = [5, 10, 20, 50, 100]
 top_teams_sel = st.sidebar.selectbox("Number of top teams", top_options, 1)
 top_players_sel = st.sidebar.selectbox("Number of top players", top_options, 3)
 
@@ -75,7 +79,7 @@ team_df = team_df_ungrouped.groupby("team", as_index=False).mean()
 team_df["matches"] = team_df_ungrouped.groupby("team", as_index=False).count()["win_rate"]
 # Filter the top teams
 team_df = team_df.sort_values(by="rank", ascending=True)
-team_df = team_df.head(100)
+team_df = team_df.head(max(top_options))
 
 # Compute the player consistency coefficient
 top_team_names = list(team_df.head(top_teams_sel).team.unique())
